@@ -14,15 +14,23 @@ var (
 	withLogstash    = flag.Bool("with_ls", true, "Send logs to logstash")
 	logstashPort    = flag.Int("ls_port", 10001, "Logstash port")
 	logstashAddress = flag.String("ls_ip", "localhost", "Logstash ip address")
+	logLevel        = flag.String("log_level", "info", "Logs level filter, one of: panic, fatal, warn, info, debug")
 )
 
 var logEntry *logrus.Entry
 
-func init() {
+var inited = false
+
+func Init() {
+	if inited {
+		return
+	}
+	inited = true
+	//flag.Parse()
 	log.SetFormatter(&log.JSONFormatter{
 		TimestampFormat: "2006-01-02 15:04:05.000",
 	})
-	//set up logging settings
+
 	if *withLogstash {
 		serverAddr := fmt.Sprint(*logstashAddress, ":", *logstashPort)
 		conn, err := net.Dial("tcp", serverAddr)
@@ -37,9 +45,18 @@ func init() {
 		}
 		log.SetOutput(logFile)
 	}
+
 	logEntry = log.WithFields(log.Fields{
 		"app": config.AppName,
 	})
+
+	level, err := log.ParseLevel(*logLevel)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		log.SetLevel(log.InfoLevel)
+	} else {
+		log.SetLevel(level)
+	}
 }
 
 // WithError creates an entry from the standard logger and adds an error to it, using the value defined in ErrorKey as key.

@@ -49,6 +49,8 @@ func usage(w io.Writer) {
 }
 
 func main() {
+	flag.Parse()
+	log.Init()
 	//start tranzaq wrapper
 	tranzaq := wrapper.New(*wrapperDir, *winePath)
 	err := tranzaq.Start()
