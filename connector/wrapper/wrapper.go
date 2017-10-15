@@ -22,6 +22,7 @@ const (
 const (
 	label_RequstResponce = "!@#$%"
 	label_BrokerData     = "%$#@!"
+	label_ServerStarted  = "server started"
 )
 
 var WrapperNotStarted = errors.New("Wrapper not started")
@@ -174,6 +175,7 @@ func (wrapper TranzaqWrapper) closeRunning() error {
 func (wrapper TranzaqWrapper) processBrokerData() {
 	for data := range wrapper.brokerData {
 		logger.Debug(data)
+		//TODO
 	}
 }
 
@@ -207,7 +209,7 @@ func (wrapper TranzaqWrapper) listenAnswers(r io.Reader) {
 			}
 		} else if strings.HasPrefix(line, label_BrokerData) {
 			wrapper.brokerData <- line[len(label_BrokerData):]
-		} else if line == "server started" {
+		} else if line == label_ServerStarted {
 			wrapper.started.Done()
 		}
 	}

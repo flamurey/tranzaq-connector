@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	withLogstash    = flag.Bool("with_ls", true, "Send logs to logstash")
+	withLogstash    = flag.Bool("with_ls", false, "Send logs to logstash or plain file.")
 	logstashPort    = flag.Int("ls_port", 10001, "Logstash port")
 	logstashAddress = flag.String("ls_ip", "localhost", "Logstash ip address")
 	logLevel        = flag.String("log_level", "info", "Logs level filter, one of: panic, fatal, warn, info, debug")
@@ -28,20 +28,20 @@ func Init() {
 	inited = true
 	//flag.Parse()
 	log.SetFormatter(&log.JSONFormatter{
-		TimestampFormat: "2006-01-02 15:04:05.000",
+		TimestampFormat: "2006-01-02 15:04:05.000Z07:00",
 	})
 
 	if *withLogstash {
 		serverAddr := fmt.Sprint(*logstashAddress, ":", *logstashPort)
 		conn, err := net.Dial("tcp", serverAddr)
 		if err != nil {
-			Fatal("Cannot connect to logstah. Logging into log file.")
+			panic("Cannot connect to logstash.")
 		}
 		log.SetOutput(conn)
 	} else {
 		logFile, err := os.OpenFile("tranzaq.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
-			Fatalf("error opening file: %v", err)
+			panic("error opening file: " + err.Error())
 		}
 		log.SetOutput(logFile)
 	}
@@ -49,7 +49,6 @@ func Init() {
 	logEntry = log.WithFields(log.Fields{
 		"app": config.AppName,
 	})
-
 	level, err := log.ParseLevel(*logLevel)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
